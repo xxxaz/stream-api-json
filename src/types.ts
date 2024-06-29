@@ -1,0 +1,22 @@
+export type Primitive = null|boolean|number|string;
+export type SerializableArray = readonly Serializable[];
+export type SerializableObject = { readonly [property: string]: Serializable };
+export type Serializable = Primitive|SerializableArray|SerializableObject;
+
+export type PartialSerializableArray<A extends SerializableArray>
+    = A extends [...infer P, any]
+        ? P extends SerializableArray
+            ? A|PartialSerializableArray<P>
+            : never
+        : [];
+
+export type IterateSource<T>
+    = Iterable<T>
+    | AsyncIterable<T>
+    | ReadableStream<T>;
+
+export type StreamingJsonOptions = {
+    strict?: boolean;
+    strategy?: QueuingStrategy<string>;
+};
+    

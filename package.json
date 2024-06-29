@@ -1,0 +1,42 @@
+{
+    "name": "stream-api-json",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "rm tsconfig.tsbuildinfo && rm -r ./dest && npx tsc",
+        "docs": "typedoc --out ./docs/ ./src/",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/xxxaz/stream-api-json.git"
+    },
+    "keywords": [
+        "json",
+        "stream",
+        "streaming",
+        "browser",
+        "parser",
+        "encoder",
+        "decoder"
+    ],
+    "engines": {
+        "node": ">=18"
+    },
+    "author": "xxx inc.",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/xxxaz/stream-api-json/issues"
+    },
+    "homepage": "https://github.com/xxxaz/stream-api-json#readme",
+    "devDependencies": {
+        "@types/jest": "^29.5.12",
+        "express": "^4.19.2",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.5",
+        "ts-node": "^10.9.2",
+        "typedoc": "^0.26.3",
+        "typescript": "^5.5.2"
+    }
+}
