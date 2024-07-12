@@ -9,7 +9,7 @@ type LoadingEntry<T extends SerializableObject, K extends keyof T & string = key
     value?: ParsingJson<T[K]>;
 };
 
-type Entry<T extends SerializableObject, K extends keyof T & string = keyof T & string> = [
+export type ParsingEntry<T extends SerializableObject, K extends keyof T & string = keyof T & string> = [
     K, ParsingJson<T[K]>
 ];
 
@@ -92,7 +92,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
             async (loaded: string) => {
                 if(!loaded.length) return null;
                 const errorOptions = () => {
-                    return { streamJson: this, source: loaded, offset: pointer };
+                    return { parsingJson: this, source: loaded, offset: pointer };
                 };
                 if(loaded[0] !== '{') {
                     throw new BadParse(`object must starts with '{', but passed '${loaded[0]}'.`, errorOptions());
@@ -144,7 +144,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
                     if (lastParse !== ':') {
                         if (lastEntry && !lastEntry.value?.completed) {
                             throw new BadParse('Incomplete previous value.', {
-                                streamJson: this,
+                                parsingJson: this,
                                 source: loaded,
                                 offset: pointer,
                             });
@@ -153,7 +153,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
                             throw new BadParse(
                                 'property names must be double-quoted string',
                                 {
-                                    streamJson: this,
+                                    parsingJson: this,
                                     source: loaded,
                                     offset: pointer,
                                 }
@@ -195,7 +195,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
         }
     }
 
-    async * entries() : AsyncGenerator<Entry<Type>> {
+    async * entries() : AsyncGenerator<ParsingEntry<Type>> {
         let pointer = 0;
         while (true) {
             while (pointer < this.#loadedEntries.length) {

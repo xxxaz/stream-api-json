@@ -17,7 +17,7 @@ export abstract class ParsingJsonFixed<Type extends null|boolean> extends Parsin
                     throw new BadParse(
                         `expects a string with "${expect}", but passed "${passed}".`,
                         {
-                            streamJson: this,
+                            parsingJson: this,
                             source: loaded,
                             offset: 0
                         }

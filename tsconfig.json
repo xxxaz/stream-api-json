@@ -2,17 +2,15 @@
     "compilerOptions": {
         "target": "ESNext",
         "types": ["node"],
-        "declaration": true,
+        "declaration": false,
         "sourceMap": true,
         "strict": true,
         "alwaysStrict": true,
         "downlevelIteration": true,
         "module": "NodeNext",
-        "moduleResolution": "NodeNext",
         "esModuleInterop": true,
         "incremental": true,
-        "rootDir": "./src",
-        "outDir": "./dest"
+        "rootDir": "./src"
     },
     "include": [
         "./src/**/*.ts"

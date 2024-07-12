@@ -5,7 +5,7 @@ import { ParsingJsonArray } from "./ParsingJsonArray";
 import { ParsingJsonObject } from "./ParsingJsonObject";
 import { type StreamingJsonOptions } from "../types";
 
-export type ParsingJsonTypes
+export type ParsingJsonWritableStream
     = ParsingJsonNull
     | ParsingJsonTrue
     | ParsingJsonFalse
@@ -14,9 +14,9 @@ export type ParsingJsonTypes
     | ParsingJsonArray<any>
     | ParsingJsonObject<any>;
 
-export type StreamJson = Omit<ParsingJsonTypes, keyof WritableStream>;
+export type ParsingJsonTypes = Omit<ParsingJsonWritableStream, keyof WritableStream>;
 
-export function resolveParseType(initial: string, options?: StreamingJsonOptions): ParsingJsonTypes|null {
+export function resolveParseType(initial: string, options?: StreamingJsonOptions): ParsingJsonWritableStream|null {
     const primalClass = [
         ParsingJsonNull,
         ParsingJsonTrue,

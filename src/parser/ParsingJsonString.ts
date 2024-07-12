@@ -37,7 +37,7 @@ export class ParsingJsonString<T extends string = string>
                     throw new BadParse(
                         `string must starts with '"', but passed '${loaded[0]}'.`,
                         {
-                            streamJson: this,
+                            parsingJson: this,
                             source: loaded,
                             offset: 0
                         }

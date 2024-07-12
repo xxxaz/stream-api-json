@@ -1,3 +1,7 @@
-dest
 node_modules
-tsconfig.tsbuildinfo
+coverage
+*.tgz
+*.tsbuildinfo
+/esm
+/cjs
+/types

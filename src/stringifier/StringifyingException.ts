@@ -1,6 +1,6 @@
 import { StringifyingJson } from "./StringifyingJson";
 
-type StringifyErrorOptions = {
+export type StringifyErrorOptions = {
     readonly stringifyingJson?: StringifyingJson;
     readonly cause?: unknown;
 };
@@ -55,7 +55,7 @@ export class UncaughtStringifyError extends StringifyingException {
     }
 }
 
-export class StreamAborted extends StringifyingException {
+export class StringifyingStreamAborted extends StringifyingException {
     readonly name = 'StreamAborted';
     constructor(
         readonly reason: any,

@@ -1,9 +1,9 @@
-import { Resolvers } from "../utility";
-import { BadParse, IncompleteParse, ParseErrorOptions, StreamAborted, ParsingException, UncaughtParseError } from "./ParsingException";
-import { type StreamJson } from "./ParsingJsonTypes";
+import { LazyResolvers } from "../utility";
+import { BadParse, IncompleteParse, ParseErrorOptions, ParsingStreamAborted, ParsingException, UncaughtParseError } from "./ParsingException";
+import { type ParsingJsonTypes } from "./ParsingJsonTypes";
 import { type StreamingJsonOptions, type Serializable } from "../types";
 
-type TypeConstructor
+export type TypeConstructor
     = null
     | BooleanConstructor
     | NumberConstructor
@@ -47,7 +47,7 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
             this.#complete();
         } catch(err: unknown) {
             this.#caughtError(err, {
-                streamJson: this as StreamJson,
+                parsingJson: this as ParsingJsonTypes,
                 source: loaded,
                 offset: this.#source.length
             });
@@ -56,12 +56,12 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
 
     #abort(reason: any) {
         const options = {
-            streamJson: this as StreamJson,
+            parsingJson: this as ParsingJsonTypes,
             source: this.#source,
             offset: this.#source.length
         };
         this.#caughtError(
-            new StreamAborted(reason, options),
+            new ParsingStreamAborted(reason, options),
             options
         );
     }
@@ -76,7 +76,7 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
                 ? err.message
                 : String(err);
             const options = {
-                streamJson: this as StreamJson,
+                parsingJson: this as ParsingJsonTypes,
                 source: this.#source,
                 offset: this.#source.length
             };
@@ -94,8 +94,8 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
         return this.#source;
     }
 
-    readonly #completeResolvers = new Resolvers<Type>();
-    #iterateResolvers = new Resolvers<void>();
+    readonly #completeResolvers = new LazyResolvers<Type>();
+    #iterateResolvers = new LazyResolvers<void>();
 
     all(): Promise<Type> {
         return this.#completeResolvers.promise;
@@ -110,7 +110,7 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
     #goNext(): void {
         if(!this.#iterateResolvers) return;
         const { resolve } = this.#iterateResolvers;
-        this.#iterateResolvers = new Resolvers();
+        this.#iterateResolvers = new LazyResolvers();
         resolve();
     }
 

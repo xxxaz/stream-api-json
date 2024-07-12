@@ -56,7 +56,7 @@ export class ParsingJsonArray<Type extends SerializableArray>
             async (loaded: string) => {
                 if(!loaded.length) return null;
                 const errorOptions = () => {
-                    return { streamJson: this, source: loaded, offset: pointer };
+                    return { parsingJson: this, source: loaded, offset: pointer };
                 };
                 if(loaded[0] !== '[') {
                     throw new BadParse(`array must starts with '[', but passed '${loaded[0]}'.`, errorOptions());

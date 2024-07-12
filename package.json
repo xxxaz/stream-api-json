@@ -1,17 +1,8 @@
 {
     "name": "stream-api-json",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "build": "rm tsconfig.tsbuildinfo && rm -r ./dest && npx tsc",
-        "docs": "typedoc --out ./docs/ ./src/",
-        "test": "jest"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/xxxaz/stream-api-json.git"
-    },
+    "author": "xxx inc.",
+    "description": "Sequential conversion between JavaScript objects and JSON strings, available in both browsers and Node.js.",
     "keywords": [
         "json",
         "stream",
@@ -21,22 +12,54 @@
         "encoder",
         "decoder"
     ],
-    "engines": {
-        "node": ">=18"
-    },
-    "author": "xxx inc.",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/xxxaz/stream-api-json.git"
+    },
+    "homepage": "https://github.com/xxxaz/stream-api-json#readme",
     "bugs": {
         "url": "https://github.com/xxxaz/stream-api-json/issues"
     },
-    "homepage": "https://github.com/xxxaz/stream-api-json#readme",
+    "engines": {
+        "node": ">=18"
+    },
+    "types": "./types/index.d.js",
+    "main": "./cjs/index.js",
+    "module": "./esm/index.js",
+    "exports": {
+        ".": {
+            "types": "./types/index.d.ts",
+            "require": "./cjs/index.js",
+            "import": "./esm/index.js",
+            "default": "./esm/index.js"
+        },
+        "./*": {
+            "types": "./types/*.d.ts",
+            "require": "./cjs/*.js",
+            "import": "./esm/*.js",
+            "default": "./esm/*.js"
+        }
+    },
+    "files": [
+        "types",
+        "cjs",
+        "esm"
+    ],
+    "scripts": {
+        "clean": "rm -rf ./*.tsbuildinfo ./types ./esm ./cjs",
+        "transpile": "tsc -b tsconfig-types.json tsconfig-esm.json tsconfig-cjs.json",
+        "build": "npm run clean && npm run transpile",
+        "prepublish": "npm run build",
+        "docs": "typedoc --out ./docs/ ./src/",
+        "test": "jest"
+    },
     "devDependencies": {
         "@types/jest": "^29.5.12",
-        "express": "^4.19.2",
         "jest": "^29.7.0",
         "ts-jest": "^29.1.5",
         "ts-node": "^10.9.2",
-        "typedoc": "^0.26.3",
+        "typedoc": "^0.26.4",
         "typescript": "^5.5.2"
     }
 }

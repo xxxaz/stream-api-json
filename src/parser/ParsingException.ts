@@ -1,14 +1,14 @@
-import { type StreamJson } from "./ParsingJsonTypes";
+import { type ParsingJsonTypes } from "./ParsingJsonTypes";
 
 export type ParseErrorOptions = {
     readonly cause?: unknown;
-    readonly streamJson?: StreamJson;
+    readonly parsingJson?: ParsingJsonTypes;
     readonly source?: string;
     readonly offset?: number;
 };
 
 export abstract class ParsingException extends Error {
-    readonly streamJson?: StreamJson;
+    readonly parsingJson?: ParsingJsonTypes;
     readonly source?: string;
     readonly offset?: number;
 
@@ -17,7 +17,7 @@ export abstract class ParsingException extends Error {
         options?: ParseErrorOptions
     ) {
         super(message, options);
-        this.streamJson = options?.streamJson;
+        this.parsingJson = options?.parsingJson;
         this.source = options?.source;
         this.offset = options?.offset;
     }
@@ -57,7 +57,7 @@ export class UncaughtParseError extends ParsingException {
     }
 }
 
-export class StreamAborted extends ParsingException {
+export class ParsingStreamAborted extends ParsingException {
     readonly name = 'StreamAborted';
     constructor(
         readonly reason: any,

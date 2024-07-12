@@ -1,4 +1,6 @@
 import { JsonStreamingParser } from "./parser/JsonStreamingParser";
+import { type ServerResponse } from 'http';
+import { type Stringifyable, stringify } from "./stringifier/Stringifyable";
 
 export function responseToTextStream(response: Response) {
     if(!response.body) {
@@ -17,4 +19,20 @@ export function parseFromResponse(response: Response) {
     return JsonStreamingParser
         .readFrom(responseToTextStream(response))
         .root();
+}
+
+export async function responseChunkedJson(
+    response: ServerResponse,
+    source: Stringifyable,
+    strict: boolean = false
+) {
+    response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Transfer-Encoding': 'chunked'
+    });
+    for await(const chunk of stringify(source, strict)) {
+        response.write(chunk);
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    response.end();
 }

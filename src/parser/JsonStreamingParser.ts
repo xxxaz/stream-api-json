@@ -1,9 +1,9 @@
-import { Resolvers } from "../utility";
+import { LazyResolvers } from "../utility";
 import { BadParse } from "./ParsingException";
 import { type ParsingJsonTypes, resolveParseType } from "./ParsingJsonTypes";
 import { type StreamingJsonOptions, type Serializable } from "../types";
 
-type ParseSource
+export type ParseSource
     = ReadableStream<string>
     | AsyncIterable<string>
     | Iterable<string>;
@@ -40,8 +40,8 @@ export class JsonStreamingParser<T extends Serializable = any> extends WritableS
         return writer.close();
     }
 
-    readonly #completeResolver = new Resolvers<void>();
-    readonly #rootResolver = new Resolvers<ParsingJsonTypes>();
+    readonly #completeResolver = new LazyResolvers<void>();
+    readonly #rootResolver = new LazyResolvers<ParsingJsonTypes>();
     #rootWriter: WritableStreamDefaultWriter|null = null;
     root(): Promise<ParsingJsonTypes> {
         return this.#rootResolver.promise;

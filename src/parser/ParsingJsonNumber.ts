@@ -23,7 +23,7 @@ export class ParsingJsonNumber extends ParsingJson<number, null> {
                 let trimmed = loaded;
                 const errorOptions = () => {
                     return {
-                        streamJson: this,
+                        parsingJson: this,
                         source: loaded,
                         offset: loaded.length - trimmed.length
                     };

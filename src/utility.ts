@@ -1,10 +1,13 @@
 import { type IterateSource } from "./types";
 
+type Resolve<T> = (value: T | PromiseLike<T>) => void;
+type Reject = (reason: unknown) => void;
+
 const Incomplete = Symbol('Incomplete');
-export class Resolvers<T> implements PromiseWithResolvers<T> {
-    #resolve: ((value: T | PromiseLike<T>) => void)|null = null;
+export class LazyResolvers<T> {
+    #resolve: Resolve<T>|null = null;
     #value: T|typeof Incomplete = Incomplete;
-    readonly resolve = async (value: T | PromiseLike<T>) => {
+    readonly resolve: Resolve<T> = async (value) => {
         if(!this.pending) return;
         if((value as PromiseLike<T>)?.then instanceof Function) {
             try {
@@ -19,9 +22,9 @@ export class Resolvers<T> implements PromiseWithResolvers<T> {
         this.#resolve?.(value);
     };
 
-    #reject: ((reason: unknown) => void)|null = null;
+    #reject: Reject|null = null;
     #reason: unknown|typeof Incomplete = Incomplete;
-    readonly reject = (reason: unknown) => {
+    readonly reject: Reject = (reason) => {
         if(!this.pending) return;
         this.#reason = reason;
         this.#reject?.(reason);

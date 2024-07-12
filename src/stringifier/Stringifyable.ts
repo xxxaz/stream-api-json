@@ -5,8 +5,8 @@ import { StringifyingJsonArray } from "./StringifyingJsonArray";
 import { StringifyingJsonObject } from "./StringifyingJsonObject";
 import { type StringifyingJsonString } from "./StringifyingJsonString";
 
-type StringifyableArray = readonly Stringifyable[];
-type StringifyableObject = { readonly [key: string]: Stringifyable };
+export type StringifyableArray = readonly Stringifyable[];
+export type StringifyableObject = { readonly [key: string]: Stringifyable };
 
 export type Stringifyable
     = Serializable
@@ -16,22 +16,23 @@ export type Stringifyable
     | StringifyingJsonArray
     | StringifyingJsonObject;
 
-type ObjectKey = StringifyingJsonString|string;
-
 export type StringifyingJsonEntry = readonly [
-    ObjectKey,
+    StringifyingJsonString|string,
     Stringifyable|Promise<Stringifyable>
 ];
 
 export async function * stringify(target: Stringifyable, strict: boolean) : AsyncGenerator<string> {
     if (target instanceof StringifyingJson) {
         yield * iterateStream(target);
+        return;
     }
     if (target instanceof Array) {
         yield * stringify(new StringifyingJsonArray(target, { strict }), strict);
+        return;
     }
     if (target instanceof Object) {
         yield * stringify(new StringifyingJsonObject(Object.entries(target), { strict }), strict);
+        return;
     }
     yield JSON.stringify(target ?? null);
 }
