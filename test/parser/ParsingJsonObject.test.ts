@@ -27,6 +27,7 @@ describe("ParsingJsonObject", () => {
     });
 
     const input = "{ \"name\": \"John\", \"age\": 30 }";
+    const prototypePollution = "{ \"__proto__\": { \"name\": \"John\", \"age\": 30 } }";
     const expected = { "name": "John", "age": 30 };
 
     it("should parse empty object", async () => {
@@ -53,6 +54,12 @@ describe("ParsingJsonObject", () => {
         await expect(parser.all()).rejects.toThrow(BadParse);
     });
 
+    it("should ignore __proto__ key", async () => {
+        const parser = new ParsingJsonObject();
+        MockStream.pipe(prototypePollution, parser);
+        await expect(parser.all()).resolves.toEqual({});
+    });
+
     describe("get", () => {
         it("should return the value for a valid key", async () => {
             const parser = new ParsingJsonObject();
@@ -67,6 +74,13 @@ describe("ParsingJsonObject", () => {
             const result = await parser.get("invalid");
             expect(result).toBeUndefined();
         });
+
+        it("should ignore __proto__ key", async () => {
+            const parser = new ParsingJsonObject();
+            MockStream.pipe(prototypePollution, parser);
+            const result = await parser.get("__proto__");
+            expect(result).toBeUndefined();
+        });
     });
 
     describe("keys", () => {
@@ -79,6 +93,16 @@ describe("ParsingJsonObject", () => {
             }
             expect(keys).toEqual(["name", "age"]);
         });
+
+        it("should ignore __proto__ key", async () => {
+            const parser = new ParsingJsonObject();
+            MockStream.pipe(prototypePollution, parser);
+            const keys = [];
+            for await (const key of parser.keys()) {
+                keys.push(key);
+            }
+            expect(keys).toEqual([]);
+        });
     });
 
     describe("entries", () => {
@@ -90,6 +114,16 @@ describe("ParsingJsonObject", () => {
                 entries.push([key, await value.all()]);
             }
             expect(entries).toEqual([["name", "John"], ["age", 30]]);
+        });
+
+        it("should ignore __proto__ key", async () => {
+            const parser = new ParsingJsonObject();
+            MockStream.pipe(prototypePollution, parser);
+            const entries = [];
+            for await (const [key, value] of parser.entries()) {
+                entries.push([key, await value.all()]);
+            }
+            expect(entries).toEqual([]);
         });
     });
 });

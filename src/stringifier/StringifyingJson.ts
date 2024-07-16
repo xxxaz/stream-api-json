@@ -18,10 +18,16 @@ export abstract class StringifyingJson extends ReadableStream<string> {
             options?.strategy
         );
         this.#strict = Boolean(options?.strict);
+        this.#ignorePrototype = Boolean(options?.ignorePrototype ?? true);
     }
 
     readonly #strict: boolean;
     get strict() {
         return this.#strict;
+    }
+
+    readonly #ignorePrototype: boolean;
+    get ignorePrototype() {
+        return this.#ignorePrototype;
     }
 }

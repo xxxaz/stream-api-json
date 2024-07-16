@@ -32,6 +32,7 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
             options?.strategy
         );
         this.#strict = Boolean(options?.strict);
+        this.#ignorePrototype = Boolean(options?.ignorePrototype ?? true);
     }
 
     async #write(chunk: string, parseChunk: (loaded: string) => Promise<number|null>) {
@@ -87,6 +88,11 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
     readonly #strict: boolean;
     get strict() {
         return this.#strict;
+    }
+
+    readonly #ignorePrototype: boolean;
+    get ignorePrototype() {
+        return this.#ignorePrototype;
     }
 
     #source: string = '';

@@ -1,4 +1,4 @@
-import { type Serializable } from "../types";
+import { StreamingJsonOptions, type Serializable } from "../types";
 import { iterateStream } from "../utility";
 import { StringifyingJson } from "./StringifyingJson";
 import { StringifyingJsonArray } from "./StringifyingJsonArray";
@@ -21,17 +21,17 @@ export type StringifyingJsonEntry = readonly [
     Stringifyable|Promise<Stringifyable>
 ];
 
-export async function * stringify(target: Stringifyable, strict: boolean) : AsyncGenerator<string> {
+export async function * stringify(target: Stringifyable, options?: StreamingJsonOptions) : AsyncGenerator<string> {
     if (target instanceof StringifyingJson) {
         yield * iterateStream(target);
         return;
     }
     if (target instanceof Array) {
-        yield * stringify(new StringifyingJsonArray(target, { strict }), strict);
+        yield * stringify(new StringifyingJsonArray(target, options), options);
         return;
     }
     if (target instanceof Object) {
-        yield * stringify(new StringifyingJsonObject(Object.entries(target), { strict }), strict);
+        yield * stringify(new StringifyingJsonObject(Object.entries(target), options), options);
         return;
     }
     yield JSON.stringify(target ?? null);

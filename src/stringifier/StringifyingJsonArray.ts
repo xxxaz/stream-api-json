@@ -20,7 +20,7 @@ export class StringifyingJsonArray extends StringifyingJson {
             if (this.#members.length > 0) yield ',';
             this.#members.push(member);
             try {
-                yield * stringify(member, this.strict);
+                yield * stringify(member, { strict: this.strict, ignorePrototype: this.ignorePrototype });
             } catch (cause: unknown) {
                 if (cause instanceof StringifyingException) {
                     throw new NestedStringifyException(this.#members.length - 1, { stringifyingJson: this, cause });

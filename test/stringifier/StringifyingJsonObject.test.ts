@@ -73,4 +73,15 @@ describe('StringifyingJsonObject', () => {
         const stringifier = new StringifyingJsonObject(source, { strict: true });
         await expect(readAll(stringifier)).rejects.toThrow(BadStringify);
     });
+
+    it("should ignore __proto__ key", async () => {
+        const source = [
+            ['key1', 'value1'],
+            ['key1', 'value2'],
+            ['__proto__', 'proto1'],
+            [new StringifyingJsonString('__proto__'), 'proto2']
+        ] as const;
+        const stringifier = new StringifyingJsonObject(source);
+        await expect(readAll(stringifier)).resolves.toBe('{"key1":"value1","key1":"value2"}');
+    });
 });

@@ -16,7 +16,16 @@ export type IterateSource<T>
     | ReadableStream<T>;
 
 export type StreamingJsonOptions = {
+    /**
+     * @default false
+     * @description If true, object with duplicated key will throw an error. 
+     */
     strict?: boolean;
+    /**
+     * @default true
+     * @description If true, the **"\_\_proto\_\_"** parameter of the object will be ignored.
+     */
+    ignorePrototype?: boolean;
     strategy?: QueuingStrategy<string>;
 };
     

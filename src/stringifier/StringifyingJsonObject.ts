@@ -20,6 +20,7 @@ export class StringifyingJsonObject extends StringifyingJson {
         yield '{';
         for await(const [rawKey, rawValue] of iterate(source)) {
             const [key, stringifiedKey] = await this.#stringifyKey(rawKey);
+            if (this.ignorePrototype && key === '__proto__') continue;
             const value = await rawValue;
             if (value === undefined) continue;
             if (this.#keys.size > 0) yield ',';
@@ -27,7 +28,7 @@ export class StringifyingJsonObject extends StringifyingJson {
             this.#keys.add(key);
             yield ':';
             try {
-                yield * stringify(value, this.strict);
+                yield * stringify(value, { strict: this.strict, ignorePrototype: this.ignorePrototype });
             } catch (cause: unknown) {
                 if (cause instanceof StringifyingException) {
                     throw new NestedStringifyException(stringifiedKey, { stringifyingJson: this, cause });

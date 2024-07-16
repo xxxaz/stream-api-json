@@ -26,37 +26,43 @@ export class ParsingJsonObject<Type extends SerializableObject>
 
     readonly #loadedEntries: LoadingEntry<Type>[] = [];
 
+    #availableKey(key: string) {
+        return this.ignorePrototype
+            ? key !== '__proto__'
+            : true;
+    }
+
     get currentKeys() : (keyof Type & string)[] {
         return this.#loadedEntries
             .filter(entry => entry.key.completed)
+            .filter(({ key }) => this.#availableKey(key.current))
             .map(entry => entry.key.current);
     }
 
     get current() {
         return Object.fromEntries(
             this.#loadedEntries
-                .filter(entry => {
-                    if (!entry.key.completed) return false;
-                    if (!entry.value) return false;
-                    return entry.value.type === null || entry.value.current !== null;
-                })
+                .filter(entry => entry.key.completed)
+                .filter(entry => entry.value?.completed)
+                .filter(({ key }) => this.#availableKey(key.current))
                 .map(entry => [ entry.key.current, entry.value?.current ])
         ) as Partial<Type>;
     }
 
     #resolveNext(lastParse: '{'|'}'|','|':'|LoadingEntry<Type>, nextChar: string, errorOptions: ParseErrorOptions) {
+        const getParseType = () => resolveParseType(nextChar, { strict: this.strict, ignorePrototype: this.ignorePrototype }) as ParsingJsonString;
         switch(lastParse) {
             case '}':
                 throw new BadParse("unexpected non-whitespace character after JSON object", errorOptions);
             case '{':
                 if(nextChar === '}') return nextChar;
-                if(nextChar === '"') return resolveParseType(nextChar, { strict: this.strict }) as ParsingJsonString;
+                if(nextChar === '"') return getParseType();
                 throw new BadParse("expected double-quoted property name or '}'", errorOptions);
             case ',':
-                if(nextChar === '"') return resolveParseType(nextChar, { strict: this.strict }) as ParsingJsonString;
+                if(nextChar === '"') return getParseType();
                 throw new BadParse("expected double-quoted property name", errorOptions);
             case ':':
-                const parser = resolveParseType(nextChar, { strict: this.strict });
+                const parser = getParseType();
                 if (parser) return parser;
                 throw new BadParse("unexpected character", errorOptions);
         }
@@ -187,7 +193,8 @@ export class ParsingJsonObject<Type extends SerializableObject>
         while (true) {
             while (pointer < this.#loadedEntries.length) {
                 const entry = this.#loadedEntries[pointer];
-                yield await entry.key.all();
+                const key = await entry.key.all();
+                if (this.#availableKey(key)) yield key;
                 pointer += 1;
             }
             if(this.completed) return;
@@ -202,7 +209,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
                 const entry = this.#loadedEntries[pointer];
                 const key = await entry.key.all();
                 if (!entry.value) break;
-                yield [ key, entry.value ];
+                if (this.#availableKey(key)) yield [ key, entry.value ];
                 pointer += 1;
             }
             if(this.completed) return;
