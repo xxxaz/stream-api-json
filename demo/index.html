@@ -1,0 +1,67 @@
+<html>
+<head>
+<script type="module">
+import { JsonStreamingParser } from '/src/index.js';
+const startButtons = document.querySelector('#start');
+document.querySelector('#fetch').onclick = ()=>loadStream('/demo/demo-fetch.js');
+document.querySelector('#worker').onclick = ()=>loadStream('/demo/demo-worker.js');
+
+async function loadStream(script) {
+    startButtons.hidden = true;
+    const { loader } = await import(script);
+    const stream = await loader();
+    const [raw, parsing] = stream.tee();
+    displayRawJson(raw);
+    displayParsedJson(parsing);
+}
+
+async function displayRawJson(readableStream) {
+    const element = document.querySelector('#raw');
+    const reader = readableStream.getReader();
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) return;
+        element.textContent += value;
+    }
+}
+
+async function displayParsedJson(readableStream) {
+    const root = await JsonStreamingParser
+        .readFrom(readableStream)
+        .root();
+    const element = document.querySelector('#parsing');
+    while(!root.completed && !root.stopped) {
+        await root.waitNext();
+        element.textContent = JSON.stringify(root.current, null, 4);
+    }
+}
+</script>
+<style>
+    pre {
+        width: 90%;
+        min-height: 1em;
+        max-height: 50em;
+        padding: 0.5em;
+        overflow: auto;
+        background-color: lightgray;
+        border: 1px solid gray;
+        border-radius: 4px;
+    }
+</style>
+</head>
+<body>
+    <h1>Stream-API JSON Demo</h1>
+    <section id="start">
+        <button id="fetch">fetch</button>
+        <button id="worker">Worker</button>
+    </section>
+    <section>
+        <h2>Raw response</h2>
+        <pre id="raw"></pre>
+    </section>
+    <section>
+        <h2>Parsing JSON</h2>
+        <pre id="parsing"></pre>
+    </section>
+</body>
+</html>

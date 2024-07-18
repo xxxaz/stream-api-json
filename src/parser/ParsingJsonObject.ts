@@ -34,7 +34,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
 
     get currentKeys() : (keyof Type & string)[] {
         return this.#loadedEntries
-            .filter(entry => entry.key.completed)
+            .filter(({ key }) => key.completed)
             .filter(({ key }) => this.#availableKey(key.current))
             .map(entry => entry.key.current);
     }
@@ -42,10 +42,10 @@ export class ParsingJsonObject<Type extends SerializableObject>
     get current() {
         return Object.fromEntries(
             this.#loadedEntries
-                .filter(entry => entry.key.completed)
-                .filter(entry => entry.value?.completed)
+                .filter(({ key }) => key.completed)
                 .filter(({ key }) => this.#availableKey(key.current))
-                .map(entry => [ entry.key.current, entry.value?.current ])
+                .filter(({ value }) => value)
+                .map(({ key, value }) => [ key.current, value?.current ])
         ) as Partial<Type>;
     }
 

@@ -1,8 +1,8 @@
-import { type ServerResponse } from 'http';
 import { type Readable } from 'stream';
 import { JsonStreamingParser } from "./parser/JsonStreamingParser.js";
 import { type Stringifyable, stringify } from "./stringifier/Stringifyable.js";
 import { StreamingJsonOptions } from "./types.js";
+import { iterateStream } from './utility.js';
 
 export function fromNodeReadable(
     stream: Readable,
@@ -19,12 +19,22 @@ export function fromNodeReadable(
     return parser;
 }
 
-export async function toNodeReadable(
-    source: Stringifyable,
-    options?: StreamingJsonOptions
-) {
-    const { Readable } = await import('stream');
-    const generator = stringify(source, options);
+type Source = Stringifyable|ReadableStream<string>;
+type NodeReadable = typeof import('stream').Readable;
+export function toNodeReadable(source: Source, options?: StreamingJsonOptions): Promise<Readable>;
+export function toNodeReadable(source: Source, options: StreamingJsonOptions|undefined, Readable: NodeReadable): Readable;
+export function toNodeReadable(
+    source: Source,
+    options?: StreamingJsonOptions,
+    Readable?: NodeReadable
+) : Readable|Promise<Readable> {
+    if(!Readable) {
+        return import('stream').then(({ Readable }) => toNodeReadable(source, options, Readable));
+    }
+
+    const generator = (source instanceof ReadableStream)
+        ? iterateStream(source)
+        : stringify(source, options);
     return new Readable({
         async destroy(error, callback) {
             if (error) await generator.throw(error);
@@ -39,17 +49,4 @@ export async function toNodeReadable(
             }
         }
     });
-}
-
-export async function serverResponseChunkedJson(
-    response: ServerResponse,
-    source: Stringifyable,
-    options?: StreamingJsonOptions
-) {
-    const stream = await toNodeReadable(source, options);
-    response.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Transfer-Encoding': 'chunked'
-    })
-    stream.pipe(response);
 }
