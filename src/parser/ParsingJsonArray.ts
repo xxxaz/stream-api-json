@@ -1,7 +1,7 @@
-import { BadParse, NestedParseException, ParseErrorOptions, ParsingException, UncaughtParseError } from "./ParsingException";
-import { resolveParseType } from "./ParsingJsonTypes";
-import { ParsingJson } from "./ParsingJson";
-import { type StreamingJsonOptions, type PartialSerializableArray, type SerializableArray } from "../types";
+import { BadParse, NestedParseException, ParseErrorOptions, ParsingException, UncaughtParseError } from "./ParsingException.js";
+import { resolveParseType } from "./ParsingJsonTypes.js";
+import { ParsingJson } from "./ParsingJson.js";
+import { type StreamingJsonOptions, type PartialSerializableArray, type SerializableArray } from "../types.js";
 
 export class ParsingJsonArray<Type extends SerializableArray>
     extends ParsingJson<Type, PartialSerializableArray<Type>>

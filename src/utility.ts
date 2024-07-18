@@ -1,4 +1,4 @@
-import { type IterateSource } from "./types";
+import { type IterateSource } from "./types.js";
 
 type Resolve<T> = (value: T | PromiseLike<T>) => void;
 type Reject = (reason: unknown) => void;

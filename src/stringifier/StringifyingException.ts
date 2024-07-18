@@ -1,4 +1,4 @@
-import { StringifyingJson } from "./StringifyingJson";
+import { StringifyingJson } from "./StringifyingJson.js";
 
 export type StringifyErrorOptions = {
     readonly stringifyingJson?: StringifyingJson;

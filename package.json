@@ -1,5 +1,5 @@
 {
-    "name": "stream-api-json",
+    "name": "@xxxaz/stream-api-json",
     "version": "1.0.0",
     "author": "xxx inc.",
     "description": "Sequential conversion between JavaScript objects and JSON strings, available in both browsers and Node.js.",
@@ -24,6 +24,7 @@
     "engines": {
         "node": ">=18"
     },
+    "type": "module",
     "types": "./types/index.d.js",
     "main": "./cjs/index.js",
     "module": "./esm/index.js",
@@ -47,12 +48,13 @@
         "esm"
     ],
     "scripts": {
-        "clean": "rm -rf ./*.tsbuildinfo ./types ./esm ./cjs",
+        "clean": "rm -rf ./*.tsbuildinfo ./*.tgz ./types ./esm ./cjs",
         "transpile": "tsc -b tsconfig-types.json tsconfig-esm.json tsconfig-cjs.json",
         "build": "npm run clean && npm run transpile",
         "prepublish": "npm run build",
         "docs": "typedoc --out ./docs/ ./src/",
-        "test": "jest"
+        "test": "jest",
+        "demo": "node --no-warnings=ExperimentalWarning --loader=ts-node/esm ./demo/server.js"
     },
     "devDependencies": {
         "@types/jest": "^29.5.12",

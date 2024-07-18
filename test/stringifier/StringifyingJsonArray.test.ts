@@ -1,5 +1,5 @@
-import { StringifyingJsonArray } from "../../src/stringifier/StringifyingJsonArray";
-import { readAll } from "../mock";
+import { StringifyingJsonArray } from "../../src/stringifier/StringifyingJsonArray.js";
+import { readAll } from "../mock.js";
 
 describe('StringifyingJsonArray', () => {
     it('should stringify the input source', async () => {

@@ -1,9 +1,9 @@
-import { StreamingJsonOptions, type Serializable } from "../types";
-import { iterateStream } from "../utility";
-import { StringifyingJson } from "./StringifyingJson";
-import { StringifyingJsonArray } from "./StringifyingJsonArray";
-import { StringifyingJsonObject } from "./StringifyingJsonObject";
-import { type StringifyingJsonString } from "./StringifyingJsonString";
+import { StreamingJsonOptions, type Serializable } from "../types.js";
+import { iterateStream } from "../utility.js";
+import { StringifyingJson } from "./StringifyingJson.js";
+import { StringifyingJsonArray } from "./StringifyingJsonArray.js";
+import { StringifyingJsonObject } from "./StringifyingJsonObject.js";
+import { type StringifyingJsonString } from "./StringifyingJsonString.js";
 
 export type StringifyableArray = readonly Stringifyable[];
 export type StringifyableObject = { readonly [key: string]: Stringifyable };

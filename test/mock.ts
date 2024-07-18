@@ -1,4 +1,4 @@
-import { iterateStream } from "../src/utility";
+import { iterateStream } from "../src/utility.js";
 
 export class MockStream extends ReadableStream<string> {
     constructor(source: Iterable<string>) {

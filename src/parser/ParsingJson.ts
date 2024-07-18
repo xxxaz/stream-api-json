@@ -1,7 +1,7 @@
-import { LazyResolvers } from "../utility";
-import { BadParse, IncompleteParse, ParseErrorOptions, ParsingStreamAborted, ParsingException, UncaughtParseError } from "./ParsingException";
-import { type ParsingJsonTypes } from "./ParsingJsonTypes";
-import { type StreamingJsonOptions, type Serializable } from "../types";
+import { LazyResolvers } from "../utility.js";
+import { BadParse, IncompleteParse, ParseErrorOptions, ParsingStreamAborted, ParsingException, UncaughtParseError } from "./ParsingException.js";
+import { type ParsingJsonTypes } from "./ParsingJsonTypes.js";
+import { type StreamingJsonOptions, type Serializable } from "../types.js";
 
 export type TypeConstructor
     = null

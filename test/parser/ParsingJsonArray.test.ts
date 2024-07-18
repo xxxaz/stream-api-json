@@ -1,6 +1,6 @@
-import { ParsingJsonArray } from "../../src/parser/ParsingJsonArray";
-import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject";
-import { MockStream } from "../mock";
+import { ParsingJsonArray } from "../../src/parser/ParsingJsonArray.js";
+import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject.js";
+import { MockStream } from "../mock.js";
 
 describe("ParsingJsonArray", () => {
     it("should match initial character '['", () => {

@@ -1,9 +1,9 @@
-import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "./ParsingJsonFixed";
-import { ParsingJsonNumber } from "./ParsingJsonNumber";
-import { ParsingJsonString } from "./ParsingJsonString";
-import { ParsingJsonArray } from "./ParsingJsonArray";
-import { ParsingJsonObject } from "./ParsingJsonObject";
-import { type StreamingJsonOptions } from "../types";
+import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "./ParsingJsonFixed.js";
+import { ParsingJsonNumber } from "./ParsingJsonNumber.js";
+import { ParsingJsonString } from "./ParsingJsonString.js";
+import { ParsingJsonArray } from "./ParsingJsonArray.js";
+import { ParsingJsonObject } from "./ParsingJsonObject.js";
+import { type StreamingJsonOptions } from "../types.js";
 
 export type ParsingJsonWritableStream
     = ParsingJsonNull

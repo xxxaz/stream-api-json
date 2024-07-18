@@ -1,6 +1,6 @@
-import { BadParse } from "../../src/parser/ParsingException";
-import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject";
-import { MockStream } from "../mock";
+import { BadParse } from "../../src/parser/ParsingException.js";
+import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject.js";
+import { MockStream } from "../mock.js";
 
 describe("ParsingJsonObject", () => {
 
@@ -57,7 +57,16 @@ describe("ParsingJsonObject", () => {
     it("should ignore __proto__ key", async () => {
         const parser = new ParsingJsonObject();
         MockStream.pipe(prototypePollution, parser);
-        await expect(parser.all()).resolves.toEqual({});
+        const result = await parser.all();
+        expect(result).toStrictEqual({});
+        expect(result.__proto__).toStrictEqual({});
+    });
+
+    it("should parse __proto__ key at ignorePrototype is false", async () => {
+        const parser = new ParsingJsonObject({ ignorePrototype: false });
+        MockStream.pipe(prototypePollution, parser);
+        const result = await parser.all();
+        expect(result.__proto__).toStrictEqual(expected);
     });
 
     describe("get", () => {

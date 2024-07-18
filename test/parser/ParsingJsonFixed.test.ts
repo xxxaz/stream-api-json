@@ -1,4 +1,4 @@
-import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "../../src/parser/ParsingJsonFixed";
+import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "../../src/parser/ParsingJsonFixed.js";
 
 describe('ParsingJsonNull', () => {
     it('should match initial string with "null"', () => {

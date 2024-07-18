@@ -1,6 +1,6 @@
-import { type StreamingJsonOptions } from "../types";
-import { BadParse } from "./ParsingException";
-import { ParsingJson } from "./ParsingJson";
+import { type StreamingJsonOptions } from "../types.js";
+import { BadParse } from "./ParsingException.js";
+import { ParsingJson } from "./ParsingJson.js";
 
 export class ParsingJsonString<T extends string = string>
     extends ParsingJson<T, string>

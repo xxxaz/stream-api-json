@@ -1,8 +1,8 @@
-import { ParsingException, UncaughtParseError, BadParse, NestedParseException, ParseErrorOptions } from "./ParsingException";
-import { resolveParseType } from "./ParsingJsonTypes";
-import { ParsingJson } from "./ParsingJson";
-import { ParsingJsonString } from "./ParsingJsonString";
-import { type StreamingJsonOptions, type SerializableObject } from "../types";
+import { ParsingException, UncaughtParseError, BadParse, NestedParseException, ParseErrorOptions } from "./ParsingException.js";
+import { resolveParseType } from "./ParsingJsonTypes.js";
+import { ParsingJson } from "./ParsingJson.js";
+import { ParsingJsonString } from "./ParsingJsonString.js";
+import { type StreamingJsonOptions, type SerializableObject } from "../types.js";
 
 type LoadingEntry<T extends SerializableObject, K extends keyof T & string = keyof T & string> = {
     key: ParsingJsonString<K>;

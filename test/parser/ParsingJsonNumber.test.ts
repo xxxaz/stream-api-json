@@ -1,7 +1,7 @@
-import { JsonStreamingParser } from "../../src/parser/JsonStreamingParser";
-import { ParsingJsonNumber } from "../../src/parser/ParsingJsonNumber";
-import { BadParse } from "../../src/parser/ParsingException";
-import { MockStream } from "../mock";
+import { JsonStreamingParser } from "../../src/parser/JsonStreamingParser.js";
+import { ParsingJsonNumber } from "../../src/parser/ParsingJsonNumber.js";
+import { BadParse } from "../../src/parser/ParsingException.js";
+import { MockStream } from "../mock.js";
 
 describe('ParsingJsonNumber', () => {
     it('should match initial string with a number', () => {

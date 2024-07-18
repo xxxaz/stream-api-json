@@ -1,4 +1,4 @@
-import { type ParsingJsonTypes } from "./ParsingJsonTypes";
+import { type ParsingJsonTypes } from "./ParsingJsonTypes.js";
 
 export type ParseErrorOptions = {
     readonly cause?: unknown;

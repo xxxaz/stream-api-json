@@ -1,8 +1,8 @@
-import { StreamingJsonOptions, type IterateSource } from "../types";
-import { iterate } from "../utility";
-import { stringify, type Stringifyable } from "./Stringifyable";
-import { NestedStringifyException, StringifyingException, UncaughtStringifyError } from "./StringifyingException";
-import { StringifyingJson } from "./StringifyingJson";
+import { type StreamingJsonOptions, type IterateSource } from "../types.js";
+import { iterate } from "../utility.js";
+import { stringify, type Stringifyable } from "./Stringifyable.js";
+import { NestedStringifyException, StringifyingException, UncaughtStringifyError } from "./StringifyingException.js";
+import { StringifyingJson } from "./StringifyingJson.js";
 
 export class StringifyingJsonArray extends StringifyingJson {
     constructor(source: IterateSource<Stringifyable>, options?: StreamingJsonOptions) {

@@ -1,4 +1,4 @@
-import { type StreamingJsonOptions } from "../types";
+import { type StreamingJsonOptions } from "../types.js";
 
 export abstract class StringifyingJson extends ReadableStream<string> {
     constructor(genFunc: () => AsyncIterator<string>, options?: StreamingJsonOptions) {

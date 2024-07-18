@@ -1,9 +1,9 @@
-import { ParsingJsonArray } from "../../src/parser/ParsingJsonArray";
-import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "../../src/parser/ParsingJsonFixed";
-import { ParsingJsonNumber } from "../../src/parser/ParsingJsonNumber";
-import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject";
-import { ParsingJsonString } from "../../src/parser/ParsingJsonString";
-import { resolveParseType } from "../../src/parser/ParsingJsonTypes";
+import { ParsingJsonArray } from "../../src/parser/ParsingJsonArray.js";
+import { ParsingJsonFalse, ParsingJsonNull, ParsingJsonTrue } from "../../src/parser/ParsingJsonFixed.js";
+import { ParsingJsonNumber } from "../../src/parser/ParsingJsonNumber.js";
+import { ParsingJsonObject } from "../../src/parser/ParsingJsonObject.js";
+import { ParsingJsonString } from "../../src/parser/ParsingJsonString.js";
+import { resolveParseType } from "../../src/parser/ParsingJsonTypes.js";
 
 describe("resolveParseType", () => {
     it("should return an instance of ParsingJsonNull when initial is null", () => {

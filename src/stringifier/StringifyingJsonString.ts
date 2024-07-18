@@ -1,6 +1,6 @@
-import { type IterateSource, type StreamingJsonOptions } from "../types";
-import { iterate } from "../utility";
-import { StringifyingJson } from "./StringifyingJson";
+import { type IterateSource, type StreamingJsonOptions } from "../types.js";
+import { iterate } from "../utility.js";
+import { StringifyingJson } from "./StringifyingJson.js";
 
 export class StringifyingJsonString extends StringifyingJson {
     constructor(source: IterateSource<string>, options?: StreamingJsonOptions) {

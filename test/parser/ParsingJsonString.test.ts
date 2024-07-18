@@ -1,7 +1,7 @@
-import { ParsingJsonString } from "../../src/parser/ParsingJsonString";
-import { BadParse } from "../../src/parser/ParsingException";
-import { StreamingJsonOptions } from "../../src/types";
-import { MockStream } from "../mock";
+import { ParsingJsonString } from "../../src/parser/ParsingJsonString.js";
+import { BadParse } from "../../src/parser/ParsingException.js";
+import { StreamingJsonOptions } from "../../src/types.js";
+import { MockStream } from "../mock.js";
 
 describe('ParsingJsonString', () => {
     let parsingJsonString: ParsingJsonString;

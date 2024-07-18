@@ -1,7 +1,7 @@
-import { LazyResolvers } from "../utility";
-import { BadParse } from "./ParsingException";
-import { type ParsingJsonTypes, resolveParseType } from "./ParsingJsonTypes";
-import { type StreamingJsonOptions, type Serializable } from "../types";
+import { LazyResolvers } from "../utility.js";
+import { BadParse } from "./ParsingException.js";
+import { type ParsingJsonTypes, resolveParseType } from "./ParsingJsonTypes.js";
+import { type StreamingJsonOptions, type Serializable } from "../types.js";
 
 export type ParseSource
     = ReadableStream<string>

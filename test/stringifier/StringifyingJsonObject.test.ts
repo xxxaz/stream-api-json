@@ -1,7 +1,7 @@
-import { BadStringify } from "../../src/stringifier/StringifyingException";
-import { StringifyingJsonObject } from "../../src/stringifier/StringifyingJsonObject";
-import { StringifyingJsonString } from "../../src/stringifier/StringifyingJsonString";
-import { readAll } from "../mock";
+import { BadStringify } from "../../src/stringifier/StringifyingException.js";
+import { StringifyingJsonObject } from "../../src/stringifier/StringifyingJsonObject.js";
+import { StringifyingJsonString } from "../../src/stringifier/StringifyingJsonString.js";
+import { readAll } from "../mock.js";
 
 describe('StringifyingJsonObject', () => {
     it('should stringify the input source', async () => {
