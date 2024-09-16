@@ -20,3 +20,59 @@
 
 
 ## Usage
+
+### Server
+```ts
+import { createServer } from 'http';
+import { StringifyingJsonArray, StringifyingJsonString, toNodeReadable } from '@xxxaz/stream-api-json';
+
+async function * outputStream() {
+    yield "one";
+    yield "two";
+    yield "three";
+    yield new StringifyingJsonString(fibonacci());
+}
+
+async function * fibonacci() {
+    let prev = 0;
+    let cur = 1;
+    while (cur < 1000) {
+        yield String(cur);
+        const sw = cur;
+        cur += prev;
+        prev = sw;
+    }
+}
+
+createServer(async (req, res) => {
+    const source = new StringifyingJsonArray(outputStream());
+    const stream = await toNodeReadable(source);
+    res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Transfer-Encoding': 'chunked'
+    })
+    stream.pipe(res);
+})
+.listen(8080);
+```
+
+### Client
+```ts
+import { JsonStreamingParser, ParsingJsonArray, ParsingJsonString } from '@xxxaz/stream-api-json';
+
+async function fetchStream(url: string) {
+    const response = await fetch(url);
+    const readableStream = response.body?.pipeThrough(new TextDecoderStream());
+    const root = await JsonStreamingParser
+        .readFrom(readableStream)
+        .root();
+    const element = document.querySelector('#parsing');
+    if(!(root instanceof ParsingJsonArray)) throw new Error('response is not Array');
+    for await (const row of root) {
+        if(!(row instanceof ParsingJsonString)) throw new Error('row is not String');
+        const p = document.createElement('p');
+        p.innerText = await row.all();
+        element.textContent = JSON.stringify(root.current, null, 4);
+    }
+}
+```
