@@ -32,14 +32,14 @@ export class ParsingJsonArray<Type extends SerializableArray>
             case ',':
                 const next = resolveParseType(nextChar, { strict: this.strict });
                 if (next) return next;
-                throw new BadParse("expected double-quoted property name", errorOptions);
+                throw new BadParse("expected a valid JSON value after '[' or ',' in array", errorOptions);
         }
         if (!lastParse.completed) {
             throw new BadParse('Incomplete array member.', errorOptions);
         }
         if(nextChar === ']') return nextChar;
         if(nextChar === ',') return nextChar;
-        throw new BadParse("expected ':' after property name in object", errorOptions);
+        throw new BadParse("expected ',' or ']' after array member or before next member", errorOptions);
     }
 
     constructor(options?: StreamingJsonOptions) {
