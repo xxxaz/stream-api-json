@@ -1,6 +1,6 @@
 {
     "name": "@xxxaz/stream-api-json",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "author": "xxx inc.",
     "description": "Sequential conversion between JavaScript objects and JSON strings, available in both browsers and Node.js.",
     "keywords": [
