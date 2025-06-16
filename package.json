@@ -1,6 +1,6 @@
 {
     "name": "@xxxaz/stream-api-json",
-    "version": "1.0.4",
+    "version": "1.0.8",
     "author": "xxx inc.",
     "description": "Sequential conversion between JavaScript objects and JSON strings, available in both browsers and Node.js.",
     "keywords": [
@@ -25,9 +25,9 @@
         "node": ">=18"
     },
     "type": "module",
-    "types": "./types/index.d.js",
     "main": "./cjs/index.js",
     "module": "./esm/index.js",
+    "types": "./types/index.d.js",
     "exports": {
         ".": {
             "types": "./types/index.d.ts",
