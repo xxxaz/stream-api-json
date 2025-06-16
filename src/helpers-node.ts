@@ -1,4 +1,4 @@
-import { type Readable } from 'stream';
+import { Readable } from 'stream';
 import { JsonStreamingParser } from "./parser/JsonStreamingParser.js";
 import { type Stringifyable, stringify } from "./stringifier/Stringifyable.js";
 import { StreamingJsonOptions } from "./types.js";
@@ -20,17 +20,14 @@ export function fromNodeReadable(
 }
 
 type Source = Stringifyable|ReadableStream<string>;
-type NodeReadable = typeof import('stream').Readable;
 export function toNodeReadable(source: Source, options?: StreamingJsonOptions): Promise<Readable>;
-export function toNodeReadable(source: Source, options: StreamingJsonOptions|undefined, Readable: NodeReadable): Readable;
+export function toNodeReadable(source: Source, options: StreamingJsonOptions|undefined, ReadableClass: typeof Readable): Readable;
 export function toNodeReadable(
     source: Source,
     options?: StreamingJsonOptions,
-    Readable?: NodeReadable
+    ReadableClass?: typeof Readable
 ) : Readable|Promise<Readable> {
-    if(!Readable) {
-        return import('stream').then(({ Readable }) => toNodeReadable(source, options, Readable));
-    }
+    if(!ReadableClass) ReadableClass = Readable;
 
     const generator = (source instanceof ReadableStream)
         ? iterateStream(source)
