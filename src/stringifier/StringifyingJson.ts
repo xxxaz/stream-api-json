@@ -30,4 +30,8 @@ export abstract class StringifyingJson extends ReadableStream<string> {
     get ignorePrototype() {
         return this.#ignorePrototype;
     }
+
+    async all(): Promise<string> {
+        return (await Array.fromAsync(this)).join('');
+    }
 }
