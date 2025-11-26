@@ -5,7 +5,7 @@ export function responseToTextStream(response: Response) {
         throw new Error(`No response body.`);
     }
     const contentType = response.headers.get('Content-Type')?.trim() ?? '';
-    const charset = contentType.match(/charset\s*=\s*([-\w]+)/)?.[1];
+    const charset = contentType.match(/charset\s*=\s*([-\w]+)/)?.[1] || 'utf-8';
     return response.body.pipeThrough(new TextDecoderStream(charset));
 }
 
