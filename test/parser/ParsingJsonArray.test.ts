@@ -47,4 +47,30 @@ describe("ParsingJsonArray", () => {
         }
         await expect(jsonArray.all()).resolves.toEqual(expectedObjects);
     });
+
+    it("should not skip members when the consumer awaits between iterations", async () => {
+        // 消費側が yield の合間に await すると、その間にパーサが members を伸ばせる。
+        // 「今回 yield する範囲」を先に確定させないと、その分を消費済みとして飛ばす。
+        const count = 200;
+        const members = Array.from({ length: count }, (_, i) => ({ index: i }));
+        const input = JSON.stringify(members);
+        const chunkSize = Math.ceil(input.length / 4);
+        const chunks = Array.from(
+            { length: Math.ceil(input.length / chunkSize) },
+            (_, i) => input.slice(i * chunkSize, (i + 1) * chunkSize)
+        );
+
+        const jsonArray = new ParsingJsonArray<{ index: number }[]>();
+        MockStream.pipe(chunks, jsonArray);
+
+        const received = [] as number[];
+        for await (const member of jsonArray) {
+            const value = await member.all();
+            // 反復の合間にマクロタスクを挟み、パース側を進ませる
+            await new Promise(resolve => setTimeout(resolve, 0));
+            received.push(value.index);
+        }
+
+        expect(received).toEqual(members.map(({ index }) => index));
+    });
 });

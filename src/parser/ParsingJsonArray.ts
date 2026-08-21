@@ -118,9 +118,16 @@ export class ParsingJsonArray<Type extends SerializableArray>
         let pointer = 0;
         while (true) {
             const members = this.#loadedMembers;
-            if(members.length > pointer) {
-                yield * members.slice(pointer);
-                pointer = members.length;
+            // yield 中に消費側が await するとパーサが members を伸ばせるため、
+            //   1. 「今回 yield する範囲」を先に確定させる
+            //      (yield 後に members.length を読むと、その間に届いた分を消費済みとして飛ばす)
+            //   2. yield 後は完了判定より先にループ先頭へ戻り、増えた分を拾う
+            //      (yield 中に完了していると、その場で return すると残りを返さないまま終わる)
+            const until = members.length;
+            if(until > pointer) {
+                yield * members.slice(pointer, until);
+                pointer = until;
+                continue;
             }
             if(this.completed) return;
             await this.waitNext();
