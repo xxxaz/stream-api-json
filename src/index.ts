@@ -17,6 +17,9 @@ export * from "./parser/ParsingJsonNumber.js";
 export * from "./parser/ParsingJsonString.js";
 export * from "./parser/ParsingJsonArray.js";
 export * from "./parser/ParsingJsonObject.js";
+export * from "./parser/MaterializedJson.js";
+export * from "./parser/scanValueExtent.js";
+export * from "./parser/iterateJsonValues.js";
 
 export * from "./stringifier/Stringifyable.js";
 export * from "./stringifier/StringifyingException.js";
