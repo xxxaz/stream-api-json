@@ -1,11 +1,13 @@
 import { BadParse, NestedParseException, ParseErrorOptions, ParsingException, UncaughtParseError } from "./ParsingException.js";
 import { resolveParseType } from "./ParsingJsonTypes.js";
 import { ParsingJson } from "./ParsingJson.js";
+import { MaterializedJson, type ParsedMember } from "./MaterializedJson.js";
+import { scanValueExtent } from "./scanValueExtent.js";
 import { type StreamingJsonOptions, type PartialSerializableArray, type SerializableArray } from "../types.js";
 
 export class ParsingJsonArray<Type extends SerializableArray>
     extends ParsingJson<Type, PartialSerializableArray<Type>>
-    implements AsyncIterable<ParsingJson<Type[number]>>
+    implements AsyncIterable<ParsedMember<Type[number]>>
 {
     static matchInit(initial: string): boolean {
         return initial[0] === '[';
@@ -17,7 +19,25 @@ export class ParsingJsonArray<Type extends SerializableArray>
 
     readonly #loadedMembers: ParsingJson<Type[number]>[] = [];
 
+    /**
+     * 反復・逐次観測が始まっているか。
+     * 観測されていない間は子ノードを作らず、自身の範囲を走査して `JSON.parse` で値を得る
+     * (ノードごとの WritableStream 生成がヒープを数百倍に膨らませるため)。
+     */
+    #observed = false;
+    /** 逐次パスに入ったら戻らない (局所状態が進んでしまうため) */
+    #incremental = false;
+    #materialized: Type | undefined = undefined;
+
+    /** 逐次観測を要求する。完了前なら次のチャンクから子ノードを作る経路に切り替わる */
+    #observe() {
+        if (this.completed) return;
+        this.#observed = true;
+    }
+
     get current() {
+        if (this.#materialized !== undefined) return this.#materialized;
+        this.#observe();
         return this.#loadedMembers
             .filter(member => member.type === null || member.current !== null)
             .map(member => member.current) as PartialSerializableArray<Type>;
@@ -61,6 +81,31 @@ export class ParsingJsonArray<Type extends SerializableArray>
                 if(loaded[0] !== '[') {
                     throw new BadParse(`array must starts with '[', but passed '${loaded[0]}'.`, errorOptions());
                 }
+
+                // 観測されていない間は子ノードを作らず、自身の範囲を走査して JSON.parse する。
+                // 走査は状態を進めないので、観測が始まれば次の呼び出しから逐次パスへ移れる。
+                // strict では JSON.parse が見逃す検査 (キー重複など) を行うため逐次パスを使う。
+                if (!this.#observed && !this.#incremental && !this.strict) {
+                    const scanned = scanValueExtent(loaded, 0);
+                    if (scanned.kind === 'incomplete') return null;
+                    if (scanned.kind === 'invalid') {
+                        throw new BadParse(
+                            'unexpected character in array',
+                            { parsingJson: this, source: loaded, offset: scanned.offset }
+                        );
+                    }
+                    const slice = loaded.slice(0, scanned.end);
+                    try {
+                        this.#materialized = JSON.parse(slice) as Type;
+                    } catch (cause: unknown) {
+                        throw new BadParse(
+                            cause instanceof Error ? cause.message : String(cause),
+                            { parsingJson: this, source: loaded, offset: 0 }
+                        );
+                    }
+                    return scanned.end;
+                }
+                this.#incremental = true;
                 const trim = () => {
                     pointer = loaded.length - loaded.slice(pointer).trimStart().length;
                     return loaded.slice(pointer);
@@ -114,7 +159,15 @@ export class ParsingJsonArray<Type extends SerializableArray>
         );
     }
 
-    async * [Symbol.asyncIterator]() {
+    async * [Symbol.asyncIterator](): AsyncGenerator<ParsedMember<Type[number]>> {
+        this.#observe();
+        if (this.#materialized !== undefined) {
+            // 値が確定した後の反復。確定済みの子を返す
+            for (const value of this.#materialized) {
+                yield new MaterializedJson(value, JSON.stringify(value));
+            }
+            return;
+        }
         let pointer = 0;
         while (true) {
             const members = this.#loadedMembers;
