@@ -6,7 +6,6 @@
         "sourceMap": true,
         "strict": true,
         "alwaysStrict": true,
-        "downlevelIteration": true,
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "esModuleInterop": true,
