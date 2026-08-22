@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "types": ["node", "jest"],
+        "types": [
+            "node",
+            "jest"
+        ],
         "declaration": true,
         "sourceMap": true,
         "strict": true,

@@ -13,7 +13,11 @@ export abstract class ParsingException extends Error {
     readonly offset?: number;
 
     constructor(
-        message: string,
+        /**
+         * 省略時は Error の own property を作らないため、サブクラスの message getter が有効になる
+         * (空文字を渡すと own property が getter を隠してしまう)
+         */
+        message?: string,
         options?: ParseErrorOptions
     ) {
         super(message, options);
@@ -25,12 +29,14 @@ export abstract class ParsingException extends Error {
 
 export class NestedParseException extends ParsingException {
     readonly name = 'NestedParseException';
-    readonly cause!: ParsingException;
+    // declare にしないとクラスフィールド定義が Error の cause を undefined で上書きする
+    declare readonly cause: ParsingException;
     constructor(
         readonly key: number|string,
         options: ParseErrorOptions & { cause: ParsingException }
     ) {
-        super('', options);
+        // message は渡さない (下の getter でパスを組み立てる)
+        super(undefined, options);
     }
 
     get message() {

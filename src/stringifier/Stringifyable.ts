@@ -15,9 +15,13 @@ export type Stringifyable
     | StringifyingJsonArray
     | StringifyingJsonObject;
 
+/**
+ * オブジェクトのエントリ。
+ * 値が `undefined` のエントリは書き出しから除外される (JSON.stringify と同じ扱い)。
+ */
 export type StringifyingJsonEntry = readonly [
     StringifyingJsonString|string,
-    Stringifyable|Promise<Stringifyable>
+    Stringifyable|Promise<Stringifyable>|undefined
 ];
 
 export async function * stringify(target: Stringifyable, options?: StreamingJsonOptions) : AsyncGenerator<string> {

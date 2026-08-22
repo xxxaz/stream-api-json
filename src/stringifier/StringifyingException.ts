@@ -9,7 +9,11 @@ export abstract class StringifyingException extends Error {
     readonly stringifyingJson?: StringifyingJson;
 
     constructor(
-        message: string,
+        /**
+         * 省略時は Error の own property を作らないため、サブクラスの message getter が有効になる
+         * (空文字を渡すと own property が getter を隠してしまう)
+         */
+        message?: string,
         options?: StringifyErrorOptions
     ) {
         super(message, options);
@@ -19,12 +23,14 @@ export abstract class StringifyingException extends Error {
 
 export class NestedStringifyException extends StringifyingException {
     readonly name = 'NestedStringifyException';
-    readonly cause!: StringifyingException;
+    // declare にしないとクラスフィールド定義が Error の cause を undefined で上書きする
+    declare readonly cause: StringifyingException;
     constructor(
         readonly key: number|string,
         options: StringifyErrorOptions & { cause: StringifyingException }
     ) {
-        super('', options);
+        // message は渡さない (下の getter でパスを組み立てる)
+        super(undefined, options);
     }
 
     get message() {
