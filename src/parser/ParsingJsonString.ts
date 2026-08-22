@@ -2,6 +2,17 @@ import { type StreamingJsonOptions } from "../types.js";
 import { BadParse } from "./ParsingException.js";
 import { ParsingJson } from "./ParsingJson.js";
 
+const escapeChars: { readonly [char: string]: string } = {
+    '"': '"',
+    '\\': '\\',
+    '/': '/',
+    b: '\b',
+    f: '\f',
+    n: '\n',
+    r: '\r',
+    t: '\t',
+};
+
 export class ParsingJsonString<T extends string = string>
     extends ParsingJson<T, string>
     implements AsyncIterable<string>
@@ -15,23 +26,27 @@ export class ParsingJsonString<T extends string = string>
     }
 
     #result: T|null = null;
+    /**
+     * 走査しながら組み立てた復号済みの途中値。
+     *
+     * 以前は「末尾から 1 文字ずつ削って JSON.parse が通る位置を探す」実装だったため、
+     * 長い文字列では累積長に対して O(n) 回の全体パースが走っていた。
+     * 復号は走査と同時に済ませ、途中値は組み立て済みのものを返す。
+     */
+    #decoded = '';
+
     get current(): T|string {
-        if(this.#result !== null) {
-            return this.#result;
-        }
-        const start = this.source.indexOf('"');
-        for(let i = this.source.length; i > start; i--) {
-            try {
-                return JSON.parse(this.source.slice(0, i) + '"');
-            } catch (_) {}
-        }
-        return '';
+        return this.#result ?? this.#decoded;
     }
 
     constructor(options?: StreamingJsonOptions) {
-        let pointer = 1;
+        /** 走査済みの絶対位置 (開き引用符の次から) */
+        let scanned = 1;
+        let escaped = false;
+        /** \uXXXX の収集中の桁 */
+        let unicode: string|null = null;
         super(
-            async (loaded: string) => {
+            async (loaded: string, appended: string) => {
                 if(!loaded.length) return null;
                 if(loaded[0] !== '"') {
                     throw new BadParse(
@@ -44,16 +59,62 @@ export class ParsingJsonString<T extends string = string>
                     );
                 }
 
-                while (true) {
-                    const endQuoted = loaded.indexOf('"', pointer);
-                    if(endQuoted < 0) return null;
-                    try {
-                        const quoted = loaded.slice(0, endQuoted + 1);
-                        this.#result = JSON.parse(quoted);
-                        return quoted.length;
-                    } catch (_) {}
-                    pointer = endQuoted + 1;
+                const errorOptions = (offset: number) => {
+                    return { parsingJson: this, source: loaded, offset };
+                };
+
+                // 走査は新たに届いた分だけを見る (累積テキストの再走査を避ける)
+                const base = loaded.length - appended.length;
+                for (let index = Math.max(scanned, base) - base; index < appended.length; index++) {
+                    const char = appended[index];
+                    const absolute = base + index;
+
+                    if (unicode !== null) {
+                        if (!/^[0-9a-fA-F]$/.test(char)) {
+                            throw new BadParse('bad Unicode escape', errorOptions(absolute));
+                        }
+                        unicode += char;
+                        if (unicode.length === 4) {
+                            this.#decoded += String.fromCharCode(parseInt(unicode, 16));
+                            unicode = null;
+                        }
+                        continue;
+                    }
+
+                    if (escaped) {
+                        escaped = false;
+                        if (char === 'u') {
+                            unicode = '';
+                            continue;
+                        }
+                        const unescaped = escapeChars[char];
+                        if (unescaped === undefined) {
+                            throw new BadParse(
+                                `bad escaped character '${char}'`,
+                                errorOptions(absolute)
+                            );
+                        }
+                        this.#decoded += unescaped;
+                        continue;
+                    }
+
+                    if (char === '\\') {
+                        escaped = true;
+                        continue;
+                    }
+
+                    if (char === '"') {
+                        const end = absolute + 1;
+                        scanned = end;
+                        // 妥当性の最終判定は JSON.parse に委ねる (制御文字やサロゲートの扱いを合わせる)
+                        this.#result = JSON.parse(loaded.slice(0, end)) as T;
+                        return end;
+                    }
+
+                    this.#decoded += char;
                 }
+                scanned = loaded.length;
+                return null;
             },
             options
         );
