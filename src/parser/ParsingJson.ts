@@ -20,7 +20,11 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
     abstract readonly current: Type|Part;
 
     constructor(
-        parseChunk: (loaded: string) => Promise<number|null>,
+        /**
+         * @param loaded 累積したテキスト全体
+         * @param appended 今回新たに届いた分 (累積全体の再走査を避ける用途)
+         */
+        parseChunk: (loaded: string, appended: string) => Promise<number|null>,
         options?: StreamingJsonOptions
     ) {
         super(
@@ -35,13 +39,13 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
         this.#ignorePrototype = Boolean(options?.ignorePrototype ?? true);
     }
 
-    async #write(chunk: string, parseChunk: (loaded: string) => Promise<number|null>) {
+    async #write(chunk: string, parseChunk: (loaded: string, appended: string) => Promise<number|null>) {
         if (!this.#completeResolvers.pending) return;
         if(!chunk) return;
 
         const loaded = this.#source + chunk;
         try {
-            const length = await parseChunk(loaded);
+            const length = await parseChunk(loaded, chunk);
             this.#source = loaded.slice(0, length ?? undefined);
             this.#goNext();
             if (length === null) return;

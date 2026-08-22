@@ -49,13 +49,13 @@ export class JsonStreamingParser<T extends Serializable = any> extends WritableS
 
     #loaded = '';
     #pointer = 0;
-    get #referred() {
-        return this.#loaded.slice(this.#pointer);
-    }
 
     async #write(chunk: string) {
         if(!this.#completeResolver.pending) return;
         this.#loaded += chunk;
+        // root へ渡すのは「まだ書いていない分」。累積バッファを毎回 slice すると
+        // チャンク数 × 累積長のコピーが発生するため、新規到着分だけを渡す。
+        let referred = chunk;
         if(!this.#rootWriter) {
             const trimmed = this.#loaded.trimStart();
             if(!trimmed) return;
@@ -75,9 +75,11 @@ export class JsonStreamingParser<T extends Serializable = any> extends WritableS
             this.#rootResolver.resolve(root);
             this.#rootWriter = root.getWriter();
             this.#pointer = this.#loaded.length - trimmed.length;
+            // 先頭の空白を落とした位置から書き始める
+            referred = this.#loaded.slice(this.#pointer);
         }
 
-        await this.#rootWriter.write(this.#referred);
+        await this.#rootWriter.write(referred);
         this.#pointer = this.#loaded.length;
 
         const root = await this.root();

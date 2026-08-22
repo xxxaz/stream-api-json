@@ -117,3 +117,105 @@ export function scanValueExtent(source: string, start: number): ScanResult {
     }
     return { kind: 'incomplete' };
 }
+
+/**
+ * 再開可能な範囲走査。
+ *
+ * `scanValueExtent` は毎回先頭から走査するため、チャンクごとに呼ぶと累積長に対して
+ * O(n^2) になる。届いた分だけを渡して状態を持ち越せるようにしたもの。
+ */
+export type ValueScanner = {
+    /**
+     * 新たに届いたテキストを走査する。
+     * @returns 値の終端が確定したら絶対位置の `end` を持つ結果
+     */
+    consume(appended: string): ScanResult;
+};
+
+type ContainerScanState = {
+    /** 入れ子の開き括弧 */
+    readonly stack: ('{' | '[')[];
+};
+
+export function createValueScanner(): ValueScanner {
+    /** 走査済みの絶対位置 */
+    let scanned = 0;
+    /** 値の種別が確定する前は null */
+    let container: ContainerScanState | null = null;
+    let initial: string | null = null;
+    /** 文字列リテラルの中か (コンテナ内の文字列も含む) */
+    let inString = false;
+    let escaped = false;
+    /** 種別確定前に持ち越した先頭部分 (literal / number の判定用) */
+    let pending = '';
+
+    const complete = (end: number): ScanResult => ({ kind: 'complete', end });
+
+    return {
+        consume(appended: string): ScanResult {
+            if (!appended) return { kind: 'incomplete' };
+            const base = scanned;
+            scanned += appended.length;
+
+            let index = 0;
+            if (initial === null) {
+                initial = appended[0];
+                if (initial === '{' || initial === '[') {
+                    container = { stack: [initial] };
+                    index = 1;
+                } else if (initial === '"') {
+                    inString = true;
+                    index = 1;
+                } else {
+                    // literal / number は区切りが来るまで確定できないので持ち越して判定する
+                    pending += appended;
+                    const scannedWhole = scanValueExtent(pending, 0);
+                    return scannedWhole.kind === 'complete'
+                        ? complete(scannedWhole.end)
+                        : scannedWhole;
+                }
+            } else if (!container && !inString) {
+                pending += appended;
+                const scannedWhole = scanValueExtent(pending, 0);
+                return scannedWhole.kind === 'complete'
+                    ? complete(scannedWhole.end)
+                    : scannedWhole;
+            }
+
+            for (; index < appended.length; index++) {
+                const char = appended[index];
+                if (inString) {
+                    if (escaped) {
+                        escaped = false;
+                        continue;
+                    }
+                    if (char === '\\') {
+                        escaped = true;
+                        continue;
+                    }
+                    if (char !== '"') continue;
+                    inString = false;
+                    // 文字列そのものを走査していた場合はここで終端
+                    if (!container) return complete(base + index + 1);
+                    continue;
+                }
+                if (char === '"') {
+                    inString = true;
+                    continue;
+                }
+                if (!container) continue;
+                if (char === '{' || char === '[') {
+                    container.stack.push(char);
+                    continue;
+                }
+                if (char !== '}' && char !== ']') continue;
+                const opening = container.stack.pop();
+                if (opening !== (char === '}' ? '{' : '[')) {
+                    return { kind: 'invalid', offset: base + index };
+                }
+                if (!container.stack.length) return complete(base + index + 1);
+            }
+            return { kind: 'incomplete' };
+        },
+    };
+}

@@ -3,7 +3,7 @@ import { resolveParseType } from "./ParsingJsonTypes.js";
 import { ParsingJson } from "./ParsingJson.js";
 import { ParsingJsonString } from "./ParsingJsonString.js";
 import { MaterializedJson, type ParsedMember } from "./MaterializedJson.js";
-import { scanValueExtent } from "./scanValueExtent.js";
+import { createValueScanner, type ValueScanner } from "./scanValueExtent.js";
 import { type StreamingJsonOptions, type SerializableObject } from "../types.js";
 
 type LoadingEntry<T extends SerializableObject, K extends keyof T & string = keyof T & string> = {
@@ -45,6 +45,8 @@ export class ParsingJsonObject<Type extends SerializableObject>
     /** 逐次パスに入ったら戻らない (局所状態が進んでしまうため) */
     #incremental = false;
     #materialized: Type | undefined = undefined;
+    /** materialize 用の再開可能スキャナ (累積テキストの再走査を避ける) */
+    #scanner: ValueScanner | null = null;
 
     /** 逐次観測を要求する。完了前なら次のチャンクから子ノードを作る経路に切り替わる */
     #observe() {
@@ -127,7 +129,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
             pointer += 1;
         };
         super(
-            async (loaded: string) => {
+            async (loaded: string, appended: string) => {
                 if(!loaded.length) return null;
                 const errorOptions = () => {
                     return { parsingJson: this, source: loaded, offset: pointer };
@@ -140,7 +142,8 @@ export class ParsingJsonObject<Type extends SerializableObject>
                 // 走査は状態を進めないので、観測が始まれば次の呼び出しから逐次パスへ移れる。
                 // strict では JSON.parse が見逃す検査 (キー重複など) を行うため逐次パスを使う。
                 if (!this.#observed && !this.#incremental && !this.strict) {
-                    const scanned = scanValueExtent(loaded, 0);
+                    this.#scanner ??= createValueScanner();
+                    const scanned = this.#scanner.consume(appended);
                     if (scanned.kind === 'incomplete') return null;
                     if (scanned.kind === 'invalid') {
                         throw new BadParse(
