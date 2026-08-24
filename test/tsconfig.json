@@ -1,12 +1,14 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "types": ["node", "jest"],
+        "types": [
+            "node",
+            "jest"
+        ],
         "declaration": true,
         "sourceMap": true,
         "strict": true,
         "alwaysStrict": true,
-        "downlevelIteration": true,
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "esModuleInterop": true,

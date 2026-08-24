@@ -1,0 +1,17 @@
+# サプライチェーンセキュリティ強化:
+# 依存パッケージの install / postinstall script は、ここで明示 true にしたものだけが実行される
+# (任意 install スクリプトの抑止)。新規依存で warn が出たら本セクションに追記し、
+# 必要性を判定して true (許可) か false (拒否) を決める。
+# https://pnpm.io/settings#allowbuilds
+allowBuilds:
+    # 本ライブラリは実行時依存を持たず、開発依存にも build script を必要とするものは無い。
+    # 何か warn が出た場合は「本当に build が必要か」を確認してから追記する。
+    unrs-resolver: false # typedoc 経由の resolver。ランタイムでは不要
+
+# 公開直後のバージョンを取り込まない (取り込み経路を絞ってサプライチェーン攻撃の窓を狭める)。
+# 単位は分。48 時間。
+# https://pnpm.io/settings#minimumreleaseage
+minimumReleaseAge: 2880
+
+# 上記の待機を免除するもの (自社スコープの公開直後の版を使う場合はここに追記する)
+minimumReleaseAgeExclude: []

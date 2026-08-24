@@ -1,9 +1,8 @@
 import { StreamingJsonOptions, type Serializable } from "../types.js";
-import { iterateStream } from "../utility.js";
-import { StringifyingJson } from "./StringifyingJson.js";
-import { StringifyingJsonArray } from "./StringifyingJsonArray.js";
-import { StringifyingJsonObject } from "./StringifyingJsonObject.js";
+import { type StringifyingJsonArray } from "./StringifyingJsonArray.js";
+import { type StringifyingJsonObject } from "./StringifyingJsonObject.js";
 import { type StringifyingJsonString } from "./StringifyingJsonString.js";
+import { stringifyValue } from "./stringifyValues.js";
 
 export type StringifyableArray = readonly Stringifyable[];
 export type StringifyableObject = { readonly [key: string]: Stringifyable };
@@ -16,23 +15,16 @@ export type Stringifyable
     | StringifyingJsonArray
     | StringifyingJsonObject;
 
+/**
+ * オブジェクトのエントリ。
+ * 値が `undefined` のエントリは書き出しから除外される (JSON.stringify と同じ扱い)。
+ */
 export type StringifyingJsonEntry = readonly [
     StringifyingJsonString|string,
-    Stringifyable|Promise<Stringifyable>
+    Stringifyable|Promise<Stringifyable>|undefined
 ];
 
 export async function * stringify(target: Stringifyable, options?: StreamingJsonOptions) : AsyncGenerator<string> {
-    if (target instanceof StringifyingJson) {
-        yield * iterateStream(target);
-        return;
-    }
-    if (target instanceof Array) {
-        yield * stringify(new StringifyingJsonArray(target, options), options);
-        return;
-    }
-    if (target instanceof Object) {
-        yield * stringify(new StringifyingJsonObject(Object.entries(target), options), options);
-        return;
-    }
-    yield JSON.stringify(target ?? null);
+    // 入れ子ごとに ReadableStream を確保せず generator で再帰する
+    yield * stringifyValue(target, { ...options });
 }

@@ -114,3 +114,63 @@ describe('ParsingJsonString', () => {
         expect(result.done).toBe(true);
     });
 });
+describe("ParsingJsonString incremental decoding", () => {
+    it("decodes escapes while parsing", async () => {
+        const value = 'quote " backslash \\ slash / tab \t newline \n unicode あ emoji \u{1F600}';
+        const source = JSON.stringify(value);
+        for (const size of [1, 3, 17, 4096]) {
+            const chunks = Array.from(
+                { length: Math.ceil(source.length / size) },
+                (_, i) => source.slice(i * size, (i + 1) * size)
+            );
+            const parser = new ParsingJsonString();
+            MockStream.pipe(chunks, parser);
+            await expect(parser.all()).resolves.toBe(value);
+        }
+    });
+
+    it("exposes the decoded prefix as current while parsing", async () => {
+        const parser = new ParsingJsonString();
+        const writer = parser.getWriter();
+        await writer.write('"ab\\n');
+        expect(parser.current).toBe('ab\n');
+        await writer.write('cd\\u3042');
+        expect(parser.current).toBe('ab\ncdあ');
+        await writer.write('ef"');
+        await expect(parser.all()).resolves.toBe('ab\ncdあef');
+    });
+
+    it("does not treat an escaped quote as the end", async () => {
+        const value = 'a"b';
+        const parser = new ParsingJsonString();
+        MockStream.pipe(JSON.stringify(value), parser);
+        await expect(parser.all()).resolves.toBe(value);
+    });
+
+    it("rejects bad escapes", async () => {
+        const parser = new ParsingJsonString();
+        MockStream.pipe('"bad \\x escape"', parser);
+        await expect(parser.all()).rejects.toThrow(BadParse);
+    });
+
+    it("rejects bad unicode escapes", async () => {
+        const parser = new ParsingJsonString();
+        MockStream.pipe('"bad \\u12g4 escape"', parser);
+        await expect(parser.all()).rejects.toThrow(BadParse);
+    });
+
+    it("iterates the decoded text incrementally", async () => {
+        const parser = new ParsingJsonString();
+        const writer = parser.getWriter();
+        const received = [] as string[];
+        const iterating = (async () => {
+            for await (const part of parser) received.push(part);
+        })();
+        await writer.write('"first ');
+        await writer.write('second\\t');
+        await writer.write('third"');
+        await writer.close();
+        await iterating;
+        expect(received.join('')).toBe('first second\tthird');
+    });
+});
