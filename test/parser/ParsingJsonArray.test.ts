@@ -74,3 +74,43 @@ describe("ParsingJsonArray", () => {
         expect(received).toEqual(members.map(({ index }) => index));
     });
 });
+describe("switching to incremental observation", () => {
+    it("最初のチャンクに含まれる要素も、反復開始が後でも取り出せる", async () => {
+        // 観測が始まるまで子ノードを作らないため、切替時に蓄積分を掛け直さないと
+        // そのチャンクの要素が次のチャンクまで現れない
+        const parser = new ParsingJsonArray<number[]>();
+        const writer = parser.getWriter();
+        await writer.write('[1,2,');
+
+        const received = [] as number[];
+        const iterating = (async () => {
+            for await (const member of parser) {
+                received.push(await member.all() as number);
+            }
+        })();
+
+        // 追加のチャンクを送る前に、既に届いている 2 要素が出てくる
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(received).toEqual([1, 2]);
+
+        await writer.write('3]');
+        await writer.close();
+        await iterating;
+        expect(received).toEqual([1, 2, 3]);
+    });
+
+    it("current に触れた後も逐次の途中値が見える", async () => {
+        const parser = new ParsingJsonArray<number[]>();
+        const writer = parser.getWriter();
+        await writer.write('[1,2,');
+
+        // 観測を要求した時点で蓄積分が掛け直される
+        expect(parser.current).toEqual([]);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(parser.current).toEqual([1, 2]);
+
+        await writer.write('3]');
+        await writer.close();
+        await expect(parser.all()).resolves.toEqual([1, 2, 3]);
+    });
+});

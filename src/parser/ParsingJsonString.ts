@@ -123,13 +123,14 @@ export class ParsingJsonString<T extends string = string>
     async * [Symbol.asyncIterator]() {
         let pointer = 0;
         while (true) {
+            const seen = this.revision;
             const current = this.current;
             if(current.length > pointer) {
                 yield current.slice(pointer);
                 pointer = current.length;
             }
             if(this.completed) return;
-            await this.waitNext();
+            await this.waitNext(seen);
         }
     }
 }

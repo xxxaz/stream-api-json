@@ -37,26 +37,67 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
         );
         this.#strict = Boolean(options?.strict);
         this.#ignorePrototype = Boolean(options?.ignorePrototype ?? true);
+        this.#parseChunk = parseChunk;
     }
+
+    readonly #parseChunk: (loaded: string, appended: string) => Promise<number|null>;
 
     async #write(chunk: string, parseChunk: (loaded: string, appended: string) => Promise<number|null>) {
         if (!this.#completeResolvers.pending) return;
         if(!chunk) return;
+        return this.#parse(this.#source + chunk, chunk, parseChunk);
+    }
 
-        const loaded = this.#source + chunk;
+    #parsing = false;
+    #reparseRequested = false;
+
+    /**
+     * 蓄積済みのテキストをもう一度パースし直すよう要求する。
+     *
+     * コンテナは観測されるまで子ノードを作らない (範囲走査で値を確定させる) ため、観測が
+     * 始まった時点で既に届いている分を逐次パスに掛け直さないと、そのチャンクに含まれる子が
+     * 次のチャンクまで現れない。
+     * パースの最中に要求された場合は、その round が終わってから掛け直す
+     * (round 中は #source が未確定で、そのまま読むと空振りする)。
+     */
+    protected requestReparse() {
+        if (!this.#completeResolvers.pending) return;
+        this.#reparseRequested = true;
+        if (this.#parsing) return;
+        void this.#runReparse();
+    }
+
+    async #runReparse() {
+        while (this.#reparseRequested && this.#completeResolvers.pending) {
+            this.#reparseRequested = false;
+            const source = this.#source;
+            // まだ何も届いていない場合は、次のチャンクがそのまま逐次パスに入る
+            if (!source) return;
+            await this.#parse(source, source, this.#parseChunk);
+        }
+    }
+
+    async #parse(
+        loaded: string,
+        appended: string,
+        parseChunk: (loaded: string, appended: string) => Promise<number|null>
+    ) {
+        this.#parsing = true;
         try {
-            const length = await parseChunk(loaded, chunk);
+            const length = await parseChunk(loaded, appended);
             this.#source = loaded.slice(0, length ?? undefined);
             this.#goNext();
-            if (length === null) return;
-            this.#complete();
+            if (length !== null) this.#complete();
         } catch(err: unknown) {
             this.#caughtError(err, {
                 parsingJson: this as ParsingJsonTypes,
                 source: loaded,
                 offset: this.#source.length
             });
+        } finally {
+            this.#parsing = false;
         }
+        if (this.#reparseRequested) await this.#runReparse();
     }
 
     #abort(reason: any) {
@@ -111,14 +152,34 @@ export abstract class ParsingJson<Type extends Serializable, Part = Type> extend
         return this.#completeResolvers.promise;
     }
 
-    waitNext(): Promise<void> {
-        return this.#completeResolvers.pending
-            ? this.#iterateResolvers.promise
-            : this.#completeResolvers.promise as Promise<any>;
+    /**
+     * パースが進むごとに増える版数。
+     * 「読んだ後・待つ前」に進んだ分を取りこぼさないための目印。
+     */
+    #revision = 0;
+    get revision(): number {
+        return this.#revision;
+    }
+
+    /**
+     * 次の進捗を待つ。
+     *
+     * @param since 直前に観測した `revision`。渡された版数から既に進んでいる場合は
+     *   待たずに解決する (待ち始める前に進捗が起きると取りこぼして固まるため)
+     */
+    waitNext(since?: number): Promise<void> {
+        if (!this.#completeResolvers.pending) {
+            return this.#completeResolvers.promise as Promise<any>;
+        }
+        if (since !== undefined && since !== this.#revision) {
+            return Promise.resolve();
+        }
+        return this.#iterateResolvers.promise;
     }
 
     #goNext(): void {
         if(!this.#iterateResolvers) return;
+        this.#revision += 1;
         const { resolve } = this.#iterateResolvers;
         this.#iterateResolvers = new LazyResolvers();
         resolve();

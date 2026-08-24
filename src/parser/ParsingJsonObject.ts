@@ -48,10 +48,16 @@ export class ParsingJsonObject<Type extends SerializableObject>
     /** materialize 用の再開可能スキャナ (累積テキストの再走査を避ける) */
     #scanner: ValueScanner | null = null;
 
-    /** 逐次観測を要求する。完了前なら次のチャンクから子ノードを作る経路に切り替わる */
+    /**
+     * 逐次観測を要求する。
+     * 完了前なら子ノードを作る経路に切り替え、既に届いている分を掛け直す
+     * (掛け直さないと、そのチャンクに含まれる子が次のチャンクまで現れない)。
+     */
     #observe() {
         if (this.completed) return;
+        if (this.#observed) return;
         this.#observed = true;
+        this.requestReparse();
     }
 
     #availableKey(key: string) {
@@ -263,6 +269,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
         }
         let pointer = 0;
         while (true) {
+            const seen = this.revision;
             while (pointer < this.#loadedEntries.length) {
                 const entry = this.#loadedEntries[pointer];
                 const key = await entry.key.all();
@@ -270,7 +277,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
                 pointer += 1;
             }
             if(this.completed) return;
-            await this.waitNext();
+            await this.waitNext(seen);
         }
     }
 
@@ -289,6 +296,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
         }
         let pointer = 0;
         while (true) {
+            const seen = this.revision;
             while (pointer < this.#loadedEntries.length) {
                 const entry = this.#loadedEntries[pointer];
                 const key = await entry.key.all();
@@ -297,7 +305,7 @@ export class ParsingJsonObject<Type extends SerializableObject>
                 pointer += 1;
             }
             if(this.completed) return;
-            await this.waitNext();
+            await this.waitNext(seen);
         }
     }
 }

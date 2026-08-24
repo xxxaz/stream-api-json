@@ -31,10 +31,16 @@ export class ParsingJsonArray<Type extends SerializableArray>
     /** materialize 用の再開可能スキャナ (累積テキストの再走査を避ける) */
     #scanner: ValueScanner | null = null;
 
-    /** 逐次観測を要求する。完了前なら次のチャンクから子ノードを作る経路に切り替わる */
+    /**
+     * 逐次観測を要求する。
+     * 完了前なら子ノードを作る経路に切り替え、既に届いている分を掛け直す
+     * (掛け直さないと、そのチャンクに含まれる子が次のチャンクまで現れない)。
+     */
     #observe() {
         if (this.completed) return;
+        if (this.#observed) return;
         this.#observed = true;
+        this.requestReparse();
     }
 
     get current() {
@@ -173,6 +179,8 @@ export class ParsingJsonArray<Type extends SerializableArray>
         }
         let pointer = 0;
         while (true) {
+            // 読む前に版数を控える (読んだ後・待つ前の進捗を取りこぼさないため)
+            const seen = this.revision;
             const members = this.#loadedMembers;
             // yield 中に消費側が await するとパーサが members を伸ばせるため、
             //   1. 「今回 yield する範囲」を先に確定させる
@@ -186,7 +194,7 @@ export class ParsingJsonArray<Type extends SerializableArray>
                 continue;
             }
             if(this.completed) return;
-            await this.waitNext();
+            await this.waitNext(seen);
         }
     }
 }
