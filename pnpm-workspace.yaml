@@ -1,3 +1,8 @@
+# node_modules の purge 確認を求めない。
+# TTY の無い環境 (CI / エージェント) では確認プロンプトを出せず install が中断するため。
+# https://pnpm.io/settings#confirmmodulespurge
+confirmModulesPurge: false
+
 # サプライチェーンセキュリティ強化:
 # 依存パッケージの install / postinstall script は、ここで明示 true にしたものだけが実行される
 # (任意 install スクリプトの抑止)。新規依存で warn が出たら本セクションに追記し、
